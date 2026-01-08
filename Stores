@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKYNETWRLDZ | Mega Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f1f2; font-family: 'Roboto', sans-serif; }
+        .jumia-orange { background-color: #f68b1e; }
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <header class="sticky top-0 jumia-orange p-3 shadow-md z-50 text-white">
+        <h1 class="text-xl font-black italic">SKYNETWRLDZ</h1>
+        <input type="text" id="searchInput" onkeyup="search()" placeholder="Search phones & more..." class="w-full mt-2 p-2 rounded text-black text-sm outline-none">
+    </header>
+
+    <div id="productGrid" class="product-grid"></div>
+
+    <div id="cartBar" class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-between items-center hidden z-50">
+        <div><p class="text-[10px] text-gray-400 font-bold">TOTAL</p><p id="totalPrice" class="text-lg font-black text-orange-600">₦0</p></div>
+        <button onclick="openModal()" class="bg-orange-500 text-white px-6 py-3 rounded font-bold">PROCEED</button>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-black/90 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm">
+            <h2 class="text-lg font-bold border-b pb-2 mb-4">🏦 BANK TRANSFER</h2>
+            <div class="bg-blue-50 p-4 rounded text-center mb-4 text-black">
+                <p class="text-xl font-black text-blue-900">9075773669</p>
+                <p class="font-bold uppercase">moniepoint microfinance bak/ OPay</p>
+                <p class="text-xs">Account: odoh essien ugochukwu</p>
+            </div>
+            <input type="text" id="cName" placeholder="Your Name" class="w-full border p-3 rounded mb-2 text-black">
+            <input type="text" id="cAddr" placeholder="Delivery Address" class="w-full border p-3 rounded mb-4 text-black">
+            <button onclick="send()" class="w-full bg-green-600 text-white py-4 rounded font-bold">I HAVE PAID</button>
+            <button onclick="closeModal()" class="w-full mt-2 text-gray-400 text-sm">Cancel</button>
+        </div>
+    </div>
+
+<script>
+    const myNumber = "2349075773669"; // PUT YOUR NUMBER HERE
+    const delivery = 3500;
+    const products = [
+        { id: 1, name: "iPhone 16 Pro Max", price: 2150000, img: "https://images.unsplash.com/photo-1727337166164-9686001d8995?w=400" },
+        { id: 2, name: "Infinix Hot 40 Pro", price: 245000, img: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400" },
+        { id: 3, name: "Tecno Spark 20", price: 185000, img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400" },
+        { id: 4, name: "Itel A70 (128GB)", price: 95000, img: "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?w=400" },
+        { id: 5, name: "Redmi 13C", price: 145000, img: "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=400" },
+        { id: 6, name: "Pressure Cooker", price: 45000, img: "https://images.unsplash.com/photo-1584905066893-7d5c142ba4e1?w=400" }
+    ];
+
+    let cart = {};
+    function render(data) {
+        document.getElementById('productGrid').innerHTML = data.map(p => `
+            <div class="bg-white p-2 shadow-sm rounded">
+                <img src="${p.img}" class="h-32 w-full object-cover rounded">
+                <h3 class="text-[11px] font-bold mt-2 h-8 overflow-hidden uppercase text-black">${p.name}</h3>
+                <p class="text-sm font-black text-gray-900">₦${p.price.toLocaleString()}</p>
+                <div class="flex items-center justify-between mt-2 border rounded p-1 bg-gray-50 text-black">
+                    <button onclick="qty(${p.id},-1)" class="w-8 h-8 bg-white rounded shadow">-</button>
+                    <span id="q-${p.id}">${cart[p.id] || 0}</span>
+                    <button onclick="qty(${p.id},1)" class="w-8 h-8 bg-orange-500 text-white rounded shadow">+</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function qty(id, d) {
+        cart[id] = (cart[id] || 0) + d;
+        if(cart[id] <= 0) delete cart[id];
+        document.getElementById(`q-${id}`).innerText = cart[id] || 0;
+        let total = 0;
+        for(let k in cart) { total += products.find(x => x.id == k).price * cart[k]; }
+        if(total > 0) {
+            document.getElementById('cartBar').classList.remove('hidden');
+            document.getElementById('totalPrice').innerText = "₦" + (total + delivery).toLocaleString();
+        } else {
+            document.getElementById('cartBar').classList.add('hidden');
+        }
+    }
+
+    function search() {
+        let v = document.getElementById('searchInput').value.toLowerCase();
+        render(products.filter(p => p.name.toLowerCase().includes(v)));
+    }
+
+    function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+    function send() {
+        const n = document.getElementById('cName').value;
+        const a = document.getElementById('cAddr').value;
+        if(!n || !a) return alert("Enter Name/Address");
+        let total = 0;
+        let msg = `*NEW ORDER*%0A%0A`;
+        for(let id in cart) {
+            let item = products.find(x => x.id == id);
+            msg += `• ${item.name} x${cart[id]}%0A`;
+            total += item.price * cart[id];
+        }
+        msg += `%0A*Total:* ₦${(total+delivery).toLocaleString()}%0A*Customer:* ${n}%0A*Address:* ${a}`;
+        window.open(`https://wa.me/${myNumber}?text=${msg}`);
+    }
+    render(products);
+</script>
+</body>
+</html>
